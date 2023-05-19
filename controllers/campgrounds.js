@@ -1,4 +1,8 @@
 const Campground = require('../models/campground');
+const mbxGeocoding = require("@mapbox/mapbox-sdk/services/geocoding");
+const mapBoxToken = process.env.MAPBOX_TOKEN;
+const geocoder = mbxGeocoding({ accessToken: mapBoxToken });
+const { cloudinary } = require("../cloudinary");
 
 
 module.exports.index = async (req, res) => {
@@ -33,8 +37,25 @@ module.exports.showCampground = async (req, res,) => {
         }
     }).populate('author');
     if (!campground) {
-        req.flash('error', 'Cannot find that campground!');
+        req.flash('error', 'Cannot find that place review!');
         return res.redirect('/campgrounds');
     }
     res.render('campgrounds/show', { campground });
+}
+
+module.exports.renderEditForm = async (req, res) => {
+    const { id } = req.params;
+    const campground = await Campground.findById(id)
+    if (!campground) {
+        req.flash('error', 'Cannot find that place!');
+        return res.redirect('/campgrounds');
+    }
+    res.render('campgrounds/edit', { campground });
+}
+
+module.exports.deleteCampground = async (req, res) => {
+    const { id } = req.params;
+    await Campground.findByIdAndDelete(id);
+    req.flash('success', 'Successfully deleted place')
+    res.redirect('/campgrounds');
 }
